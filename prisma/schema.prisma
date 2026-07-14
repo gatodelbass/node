@@ -1,0 +1,329 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model avatars {
+  id           BigInt         @id @default(autoincrement()) @db.UnsignedBigInt
+  image        String         @db.VarChar(255)
+  status       String         @default("inactive") @db.VarChar(255)
+  created_at   DateTime?      @db.Timestamp(0)
+  updated_at   DateTime?      @db.Timestamp(0)
+  deleted_at   DateTime?      @db.Timestamp(0)
+  user_avatars user_avatars[]
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model card_tags {
+  card_id    BigInt    @db.UnsignedBigInt
+  tag_id     BigInt    @db.UnsignedBigInt
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  cards      cards     @relation(fields: [card_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "card_tags_card_id_foreign")
+  tags       tags      @relation(fields: [tag_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "card_tags_tag_id_foreign")
+
+  @@index([card_id], map: "card_tags_card_id_foreign")
+  @@index([tag_id], map: "card_tags_tag_id_foreign")
+  @@ignore
+}
+
+model cards {
+  id            BigInt       @id @default(autoincrement()) @db.UnsignedBigInt
+  collection_id BigInt       @db.UnsignedBigInt
+  name          String       @db.VarChar(255)
+  image         String?      @db.Text
+  rarity        Int?         @db.TinyInt
+  order         Int          @default(0)
+  cost          Int          @default(0)
+  top_filter    String       @default("none") @db.VarChar(255)
+  bottom_filter String       @default("none") @db.VarChar(255)
+  text          String?      @db.Text
+  layout        String       @default("vertical") @db.VarChar(255)
+  created_at    DateTime?    @db.Timestamp(0)
+  updated_at    DateTime?    @db.Timestamp(0)
+  deleted_at    DateTime?    @db.Timestamp(0)
+  card_tags     card_tags[]  @ignore
+  collections   collections  @relation(fields: [collection_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "cards_collection_id_foreign")
+  user_cards    user_cards[]
+
+  @@index([collection_id], map: "cards_collection_id_foreign")
+}
+
+model categories {
+  id          BigInt        @id @default(autoincrement()) @db.UnsignedBigInt
+  name        String        @db.VarChar(255)
+  icon        String        @db.VarChar(255)
+  created_at  DateTime?     @db.Timestamp(0)
+  updated_at  DateTime?     @db.Timestamp(0)
+  collections collections[]
+}
+
+model collections {
+  id               BigInt             @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id          BigInt             @db.UnsignedBigInt
+  category_id      BigInt             @db.UnsignedBigInt
+  name             String             @db.VarChar(255)
+  status           String             @default("created") @db.VarChar(255)
+  text             String?            @db.Text
+  errors           String?            @db.Text
+  cover_card       String?            @db.VarChar(255)
+  created_at       DateTime?          @db.Timestamp(0)
+  updated_at       DateTime?          @db.Timestamp(0)
+  deleted_at       DateTime?          @db.Timestamp(0)
+  cards            cards[]
+  categories       categories         @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "collections_category_id_foreign")
+  users            users              @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "collections_user_id_foreign")
+  user_collections user_collections[]
+
+  @@index([category_id], map: "collections_category_id_foreign")
+  @@index([user_id], map: "collections_user_id_foreign")
+}
+
+model failed_jobs {
+  id         BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  uuid       String   @unique(map: "failed_jobs_uuid_unique") @db.VarChar(255)
+  connection String   @db.Text
+  queue      String   @db.Text
+  payload    String   @db.LongText
+  exception  String   @db.LongText
+  failed_at  DateTime @default(now()) @db.Timestamp(0)
+}
+
+model items {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name       String    @db.VarChar(255)
+  image      String?   @db.Text
+  cost       Int       @default(0)
+  category   String    @default("equipment") @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+}
+
+model logs {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id    Int       @default(0)
+  event      String    @default("Log") @db.VarChar(255)
+  message    String    @default("") @db.VarChar(255)
+  data       String    @default("") @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+}
+
+model migrations {
+  id        Int    @id @default(autoincrement()) @db.UnsignedInt
+  migration String @db.VarChar(255)
+  batch     Int
+}
+
+model password_reset_tokens {
+  email      String    @id @db.VarChar(255)
+  token      String    @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+}
+
+model permissions {
+  id               BigInt             @id @default(autoincrement()) @db.UnsignedBigInt
+  name             String             @db.VarChar(255)
+  group            String             @db.VarChar(255)
+  created_at       DateTime?          @db.Timestamp(0)
+  updated_at       DateTime?          @db.Timestamp(0)
+  deleted_at       DateTime?          @db.Timestamp(0)
+  role_permissions role_permissions[] @ignore
+}
+
+model personal_access_tokens {
+  id             BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  tokenable_type String    @db.VarChar(255)
+  tokenable_id   BigInt    @db.UnsignedBigInt
+  name           String    @db.VarChar(255)
+  token          String    @unique(map: "personal_access_tokens_token_unique") @db.VarChar(64)
+  abilities      String?   @db.Text
+  last_used_at   DateTime? @db.Timestamp(0)
+  expires_at     DateTime? @db.Timestamp(0)
+  created_at     DateTime? @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+
+  @@index([tokenable_type, tokenable_id], map: "personal_access_tokens_tokenable_type_tokenable_id_index")
+}
+
+model prizes {
+  id             BigInt        @id @default(autoincrement()) @db.UnsignedBigInt
+  type           String        @db.VarChar(255)
+  icon_interval  String        @db.VarChar(255)
+  icon_milestone String        @db.VarChar(255)
+  created_at     DateTime?     @db.Timestamp(0)
+  updated_at     DateTime?     @db.Timestamp(0)
+  user_prizes    user_prizes[]
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model role_permissions {
+  role_id       BigInt      @db.UnsignedBigInt
+  permission_id BigInt      @db.UnsignedBigInt
+  created_at    DateTime?   @db.Timestamp(0)
+  updated_at    DateTime?   @db.Timestamp(0)
+  permissions   permissions @relation(fields: [permission_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "role_permissions_permission_id_foreign")
+  roles         roles       @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "role_permissions_role_id_foreign")
+
+  @@index([permission_id], map: "role_permissions_permission_id_foreign")
+  @@index([role_id], map: "role_permissions_role_id_foreign")
+  @@ignore
+}
+
+model roles {
+  id               BigInt             @id @default(autoincrement()) @db.UnsignedBigInt
+  name             String             @db.VarChar(255)
+  created_at       DateTime?          @db.Timestamp(0)
+  updated_at       DateTime?          @db.Timestamp(0)
+  deleted_at       DateTime?          @db.Timestamp(0)
+  role_permissions role_permissions[] @ignore
+}
+
+model sessions {
+  id            String  @id @db.VarChar(255)
+  user_id       BigInt? @db.UnsignedBigInt
+  ip_address    String? @db.VarChar(45)
+  user_agent    String? @db.Text
+  payload       String  @db.Text
+  last_activity Int
+
+  @@index([last_activity], map: "sessions_last_activity_index")
+  @@index([user_id], map: "sessions_user_id_index")
+}
+
+model tags {
+  id         BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
+  name       String      @db.VarChar(255)
+  created_at DateTime?   @db.Timestamp(0)
+  updated_at DateTime?   @db.Timestamp(0)
+  deleted_at DateTime?   @db.Timestamp(0)
+  card_tags  card_tags[] @ignore
+}
+
+model tales {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name       String    @db.VarChar(255)
+  text       String?   @db.Text
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+}
+
+model trades {
+  id                                           BigInt     @id @default(autoincrement()) @db.UnsignedBigInt
+  owner_card_id                                BigInt     @db.UnsignedBigInt
+  player_card_id                               BigInt     @db.UnsignedBigInt
+  status                                       String     @default("offered") @db.VarChar(255)
+  created_at                                   DateTime?  @db.Timestamp(0)
+  updated_at                                   DateTime?  @db.Timestamp(0)
+  user_cards_trades_owner_card_idTouser_cards  user_cards @relation("trades_owner_card_idTouser_cards", fields: [owner_card_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "trades_owner_card_id_foreign")
+  user_cards_trades_player_card_idTouser_cards user_cards @relation("trades_player_card_idTouser_cards", fields: [player_card_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "trades_player_card_id_foreign")
+
+  @@index([owner_card_id], map: "trades_owner_card_id_foreign")
+  @@index([player_card_id], map: "trades_player_card_id_foreign")
+}
+
+model user_avatars {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id    BigInt?   @db.UnsignedBigInt
+  avatar_id  BigInt?   @db.UnsignedBigInt
+  status     String    @default("obtained") @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+  avatars    avatars?  @relation(fields: [avatar_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_avatars_avatar_id_foreign")
+  users      users?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_avatars_user_id_foreign")
+
+  @@index([avatar_id], map: "user_avatars_avatar_id_foreign")
+  @@index([user_id], map: "user_avatars_user_id_foreign")
+}
+
+model user_boxes {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id    BigInt    @db.UnsignedBigInt
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+  users      users     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_boxes_user_id_foreign")
+
+  @@index([user_id], map: "user_boxes_user_id_foreign")
+}
+
+model user_cards {
+  id                                       BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id                                  BigInt    @db.UnsignedBigInt
+  card_id                                  BigInt    @db.UnsignedBigInt
+  status                                   String    @default("Obtenida") @db.VarChar(255)
+  created_at                               DateTime? @db.Timestamp(0)
+  updated_at                               DateTime? @db.Timestamp(0)
+  deleted_at                               DateTime? @db.Timestamp(0)
+  trades_trades_owner_card_idTouser_cards  trades[]  @relation("trades_owner_card_idTouser_cards")
+  trades_trades_player_card_idTouser_cards trades[]  @relation("trades_player_card_idTouser_cards")
+  cards                                    cards     @relation(fields: [card_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_cards_card_id_foreign")
+  users                                    users     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_cards_user_id_foreign")
+
+  @@index([card_id], map: "user_cards_card_id_foreign")
+  @@index([user_id], map: "user_cards_user_id_foreign")
+}
+
+model user_collections {
+  id            BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id       BigInt      @db.UnsignedBigInt
+  collection_id BigInt      @db.UnsignedBigInt
+  status        String      @default("inactive") @db.VarChar(255)
+  created_at    DateTime?   @db.Timestamp(0)
+  updated_at    DateTime?   @db.Timestamp(0)
+  deleted_at    DateTime?   @db.Timestamp(0)
+  collections   collections @relation(fields: [collection_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_collections_collection_id_foreign")
+  users         users       @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_collections_user_id_foreign")
+
+  @@index([collection_id], map: "user_collections_collection_id_foreign")
+  @@index([user_id], map: "user_collections_user_id_foreign")
+}
+
+model user_prizes {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id    BigInt    @db.UnsignedBigInt
+  prize_id   BigInt    @db.UnsignedBigInt
+  icon       String    @db.VarChar(255)
+  type       String    @db.VarChar(255)
+  quantity   Int
+  redeemed   Boolean   @default(false)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+  prizes     prizes    @relation(fields: [prize_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_prizes_prize_id_foreign")
+  users      users     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_prizes_user_id_foreign")
+
+  @@index([prize_id], map: "user_prizes_prize_id_foreign")
+  @@index([user_id], map: "user_prizes_user_id_foreign")
+}
+
+model users {
+  id               BigInt             @id @default(autoincrement()) @db.UnsignedBigInt
+  role             String             @default("user") @db.VarChar(255)
+  nickname         String             @db.VarChar(255)
+  email            String             @unique(map: "users_email_unique") @db.VarChar(255)
+  password         String             @db.VarChar(255)
+  remember_code    String?            @db.VarChar(255)
+  gold             BigInt             @default(0)
+  tickets          Int                @default(0)
+  boxes            Int                @default(0)
+  status           String             @default("created") @db.VarChar(255)
+  user_avatar_id   BigInt?            @db.UnsignedBigInt
+  data             Json?
+  created_at       DateTime?          @db.Timestamp(0)
+  updated_at       DateTime?          @db.Timestamp(0)
+  collections      collections[]
+  user_avatars     user_avatars[]
+  user_boxes       user_boxes[]
+  user_cards       user_cards[]
+  user_collections user_collections[]
+  user_prizes      user_prizes[]
+}
